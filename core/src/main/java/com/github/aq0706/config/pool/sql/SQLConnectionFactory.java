@@ -1,4 +1,4 @@
-package com.github.aq0706.config.pool;
+package com.github.aq0706.config.pool.sql;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -26,6 +26,9 @@ public class SQLConnectionFactory {
             initDriver();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to init driver instance for jdbcUrl=" + config.jdbcUrl, e);
+        }
+        if (DriverManager.getLoginTimeout() == 0) {
+            DriverManager.setLoginTimeout(1);
         }
     }
 

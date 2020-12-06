@@ -1,4 +1,4 @@
-package com.github.aq0706.config.util;
+package com.github.aq0706.config.pool;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,13 +33,15 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
         boolean compareAndSet(int expectState, int newState);
         void setState(int newState);
         int getState();
+
+        long getLastAccessed();
     }
 
     public interface StateListener {
         void addItem(int waiting);
     }
 
-    public ConcurrentPool(StateListener listener) {
+    public ConcurrentPool(final StateListener listener) {
         this.sharedList = new CopyOnWriteArrayList<>();
         this.threadList = ThreadLocal.withInitial(() -> new ArrayList<T>(16));
         this.listener = listener;
@@ -47,7 +49,7 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
         this.handoffQueue = new SynchronousQueue<>(true);
     }
 
-    public T borrow(long timeout, TimeUnit timeUnit) throws InterruptedException {
+    public T borrow(long timeout, final TimeUnit timeUnit) throws InterruptedException {
         List<T> list = threadList.get();
         for (int i = list.size() - 1; i >= 0; i--) {
             T entry = list.remove(i);
@@ -83,7 +85,7 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
         }
     }
 
-    public void requite(T entry) {
+    public void requite(final T entry) {
         entry.setState(IEntry.STATE_NOT_IN_USE);
 
         for (int i = 0; waiters.get() > 0; i++) {
@@ -100,7 +102,7 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
         threadLocalList.add(entry);
     }
 
-    public void add(T entry) {
+    public void add(final T entry) {
         if (closed) {
             throw new IllegalStateException("ConcurrentPool has been closed, ignoring add()");
         }
@@ -112,7 +114,7 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
         }
     }
 
-    public boolean remove(T entry) {
+    public boolean remove(final T entry) {
         if (!entry.compareAndSet(IEntry.STATE_IN_USE, IEntry.STATE_REMOVED) && entry.compareAndSet(IEntry.STATE_RESERVED, IEntry.STATE_REMOVED) && !closed) {
             return false;
         }
@@ -121,11 +123,11 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         closed = true;
     }
 
-    public List<T> values(int state) {
+    public List<T> values(final int state) {
         List<T> list = sharedList.stream().filter(e -> e.getState() == state).collect(Collectors.toList());
         Collections.reverse(list);
         return list;
@@ -136,16 +138,26 @@ public class ConcurrentPool<T extends ConcurrentPool.IEntry> implements AutoClos
         return (List<T>) sharedList.clone();
     }
 
-    public boolean reserve(T entry) {
+    public boolean reserve(final T entry) {
         return entry.compareAndSet(IEntry.STATE_NOT_IN_USE, IEntry.STATE_REMOVED);
     }
 
-    public void unreserve(T entry) {
+    public void unreserve(final T entry) {
         if (entry.compareAndSet(IEntry.STATE_RESERVED, IEntry.STATE_NOT_IN_USE)) {
             while (waiters.get() > 0 && !handoffQueue.offer(entry)) {
                 Thread.yield();
             }
         }
+    }
+
+    public int getCount(final int state) {
+        int count = 0;
+        for (T e : sharedList) {
+            if (e.getState() == state) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public int getWaitingThreadCount() {

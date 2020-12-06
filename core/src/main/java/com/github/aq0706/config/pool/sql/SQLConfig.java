@@ -1,16 +1,18 @@
-package com.github.aq0706.config.pool;
+package com.github.aq0706.config.pool.sql;
 
 /**
  * @author lidq
  */
 public class SQLConfig {
-    int maxPoolSize;
-    int corePoolSize;
+    public int maxPoolSize;
+    public int corePoolSize;
+    public int idleTimeout;
 
-    String driverClassName;
-    String username;
-    String password;
-    String jdbcUrl;
-    boolean isAutoCommit;
-    boolean isReadOnly;
+    public String driverClassName;
+    public String username;
+    public String password;
+    public String jdbcUrl;
+    public boolean isAutoCommit;
+    public boolean isReadOnly;
+
 }
