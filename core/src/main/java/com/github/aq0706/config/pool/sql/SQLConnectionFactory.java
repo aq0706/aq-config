@@ -16,7 +16,7 @@ public class SQLConnectionFactory {
 
     private Driver driver;
 
-    public SQLConnectionFactory(SQLConfig config) {
+    public SQLConnectionFactory(final SQLConfig config) {
         this.config = config;
         this.driverProperties = new Properties();
         this.driverProperties.setProperty("user", config.username);

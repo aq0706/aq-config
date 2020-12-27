@@ -67,6 +67,10 @@ public abstract class SourcePool<T extends ConcurrentPool.IEntry> {
         this.houseKeeperTask = houseKeeperExecutorService.scheduleWithFixedDelay(new HouseKeeper(), 100L, HOUSEKEEPING_PERIOD_MS, TimeUnit.MILLISECONDS);
     }
 
+    public int size() {
+        return pool.size();
+    }
+
     protected T getSource() throws SQLException {
         return getSource(30_000);
     }

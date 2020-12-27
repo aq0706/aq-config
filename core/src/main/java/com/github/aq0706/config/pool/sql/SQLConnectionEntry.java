@@ -15,7 +15,7 @@ public class SQLConnectionEntry implements ConcurrentPool.IEntry {
     private static final AtomicIntegerFieldUpdater<SQLConnectionEntry> stateUpdater;
 
     Connection connection;
-    private long lastAccessed;
+    long lastAccessed;
 
     private volatile int state = 0;
     private volatile boolean evict;
@@ -47,12 +47,12 @@ public class SQLConnectionEntry implements ConcurrentPool.IEntry {
     }
 
     @Override
-    public boolean compareAndSet(int expectState, int newState) {
+    public boolean compareAndSet(final int expectState, final int newState) {
         return stateUpdater.compareAndSet(this, expectState, newState);
     }
 
     @Override
-    public void setState(int newState) {
+    public void setState(final int newState) {
         state = newState;
     }
 

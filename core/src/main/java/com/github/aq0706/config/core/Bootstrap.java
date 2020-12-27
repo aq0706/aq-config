@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 /**
@@ -40,6 +42,16 @@ public class Bootstrap {
             SQLConnectionPool sqlConnectionPool = new SQLConnectionPool(sqlConfig);
             Connection connection = sqlConnectionPool.getConnection();
             System.out.println(connection.isValid(10));
+
+            Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery("show tables;");
+            while (rs.next()) {
+                System.out.println(rs.getString("Tables_in_aq_config"));
+            }
+            rs.close();
+            stmt.close();
+            connection.close();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
