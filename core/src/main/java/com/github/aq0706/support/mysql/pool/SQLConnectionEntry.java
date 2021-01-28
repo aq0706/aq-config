@@ -1,6 +1,6 @@
-package com.github.aq0706.config.pool.sql;
+package com.github.aq0706.support.mysql.pool;
 
-import com.github.aq0706.config.pool.ConcurrentPool;
+import com.github.aq0706.support.pool.ConcurrentPool;
 
 import java.sql.Connection;
 import java.sql.Statement;

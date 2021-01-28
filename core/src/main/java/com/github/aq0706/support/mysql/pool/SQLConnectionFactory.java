@@ -1,4 +1,7 @@
-package com.github.aq0706.config.pool.sql;
+package com.github.aq0706.support.mysql.pool;
+
+import com.github.aq0706.support.mysql.SQLConfig;
+import com.mysql.cj.conf.PropertyKey;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -19,8 +22,8 @@ public class SQLConnectionFactory {
     public SQLConnectionFactory(final SQLConfig config) {
         this.config = config;
         this.driverProperties = new Properties();
-        this.driverProperties.setProperty("user", config.username);
-        this.driverProperties.setProperty("password", config.password);
+        this.driverProperties.setProperty(PropertyKey.USER.getKeyName(), config.username);
+        this.driverProperties.setProperty(PropertyKey.PASSWORD.getKeyName(), config.password);
 
         try {
             initDriver();

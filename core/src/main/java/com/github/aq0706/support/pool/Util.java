@@ -1,4 +1,4 @@
-package com.github.aq0706.config.util;
+package com.github.aq0706.support.pool;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -10,9 +10,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 /**
  * @author lidq
  */
-public final class Util {
+final class Util {
 
-    public static ThreadPoolExecutor createThreadPoolExecutor(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy) {
+    static ThreadPoolExecutor createThreadPoolExecutor(final BlockingQueue<Runnable> queue, final String threadName, ThreadFactory threadFactory, final RejectedExecutionHandler policy) {
         if (threadFactory == null) {
             threadFactory = new DefaultThreadFactory(threadName, true);
         }

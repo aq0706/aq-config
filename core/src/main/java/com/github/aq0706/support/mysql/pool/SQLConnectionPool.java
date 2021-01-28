@@ -1,6 +1,7 @@
-package com.github.aq0706.config.pool.sql;
+package com.github.aq0706.support.mysql.pool;
 
-import com.github.aq0706.config.pool.SourcePool;
+import com.github.aq0706.support.mysql.SQLConfig;
+import com.github.aq0706.support.pool.SourcePool;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -23,6 +24,12 @@ public class SQLConnectionPool extends SourcePool<SQLConnectionEntry> {
 
         this.config = config;
         this.sqlConnectionFactory = new SQLConnectionFactory(config);
+    }
+
+    public static void init() {
+        if (DEFAULT == null) {
+            DEFAULT = new SQLConnectionPool(SQLConfig.getDefault());
+        }
     }
 
     public static SQLConnectionPool getDefault() {

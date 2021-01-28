@@ -1,4 +1,4 @@
-package com.github.aq0706.config.util;
+package com.github.aq0706.support.pool;
 
 import java.util.concurrent.Semaphore;
 
@@ -10,11 +10,11 @@ public class SuspendResumeLock {
     private static final int MAX_PERMITS = 10000;
     private final Semaphore acquisitionSemaphore;
 
-    public SuspendResumeLock() {
+    SuspendResumeLock() {
         acquisitionSemaphore = new Semaphore(MAX_PERMITS, true);
     }
 
-    public void acquire() {
+    void acquire() {
         if (acquisitionSemaphore.tryAcquire()) {
             return;
         }
@@ -22,7 +22,7 @@ public class SuspendResumeLock {
         acquisitionSemaphore.acquireUninterruptibly();
     }
 
-    public void release() {
+    void release() {
         acquisitionSemaphore.release();
     }
 

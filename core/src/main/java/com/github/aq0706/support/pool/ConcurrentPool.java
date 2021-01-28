@@ -1,4 +1,4 @@
-package com.github.aq0706.config.pool;
+package com.github.aq0706.support.pool;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,7 +1,4 @@
-package com.github.aq0706.config.pool;
-
-import com.github.aq0706.config.util.SuspendResumeLock;
-import com.github.aq0706.config.util.Util;
+package com.github.aq0706.support.pool;
 
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
@@ -72,7 +69,7 @@ public abstract class SourcePool<T extends ConcurrentPool.IEntry> {
     }
 
     protected T getSource() throws SQLException {
-        return getSource(30_000);
+        return getSource(3_000);
     }
 
     protected T getSource(final long hardTimeout) throws SQLException {

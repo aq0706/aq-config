@@ -1,4 +1,4 @@
-package com.github.aq0706.config.pool.sql;
+package com.github.aq0706.support.mysql;
 
 import com.github.aq0706.config.core.Bootstrap;
 

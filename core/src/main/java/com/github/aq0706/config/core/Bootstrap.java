@@ -1,17 +1,14 @@
 package com.github.aq0706.config.core;
 
-import com.github.aq0706.config.pool.sql.SQLConfig;
-import com.github.aq0706.config.pool.sql.SQLConnectionPool;
+import com.github.aq0706.support.mysql.DB;
+import com.github.aq0706.support.mysql.pool.SQLConnectionPool;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -32,27 +29,35 @@ public class Bootstrap {
         }
 
         try {
-            SQLConfig sqlConfig = new SQLConfig();
-            sqlConfig.jdbcUrl = properties.getProperty("mysql.url");
-            sqlConfig.username = properties.getProperty("mysql.username");
-            sqlConfig.password = properties.getProperty("mysql.password");
-            sqlConfig.driverClassName = "com.mysql.cj.jdbc.Driver";
-            sqlConfig.corePoolSize = 10;
-            sqlConfig.maxPoolSize = 20;
-            SQLConnectionPool sqlConnectionPool = new SQLConnectionPool(sqlConfig);
-            Connection connection = sqlConnectionPool.getConnection();
-            System.out.println(connection.isValid(10));
+            SQLConnectionPool.init();
+            DB.initTableInfo("com.github.aq0706.config.core");
 
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery("show tables;");
-            while (rs.next()) {
-                System.out.println(rs.getString("Tables_in_aq_config"));
-            }
-            rs.close();
-            stmt.close();
-            connection.close();
+            long effected;
+//            Config config = new Config();
+//            config.appName = "appName";
+//            config.namespace = "namespace_v1";
+//            config.key = "key";
+//            config.value = "value";
+//            effected = DB.model(Config.class).insert(config);
 
-        } catch (SQLException e) {
+//            effected = DB.model(Config.class)
+//                    .modify(new Pair<>("value", "new_value"))
+//                    .where("id = 1")
+//                    .execute();
+
+//            effected = DB.model(Config.class)
+//                    .count()
+//                    .where()
+//                    .execute();
+
+            Collection<Config> result = DB.model(Config.class)
+                    .select()
+                    .where()
+                    .query();
+
+            System.out.println(result.size());
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
