@@ -1,6 +1,6 @@
 package com.github.aq0706.support.mysql;
 
-import com.github.aq0706.config.core.Bootstrap;
+import com.github.aq0706.Bootstrap;
 
 import java.io.IOException;
 import java.io.InputStream;

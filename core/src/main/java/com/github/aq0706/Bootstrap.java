@@ -1,7 +1,10 @@
-package com.github.aq0706.config.core;
+package com.github.aq0706;
 
+import com.github.aq0706.config.core.Config;
 import com.github.aq0706.support.mysql.DB;
 import com.github.aq0706.support.mysql.pool.SQLConnectionPool;
+import com.github.aq0706.support.server.DispatchResult;
+import com.github.aq0706.support.server.Dispatcher;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -62,11 +65,19 @@ public class Bootstrap {
         }
 
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        server.createContext("/test", (HttpExchange httpExchange) -> {
-            String response = "{\"data\": \"hello\"}";
-            httpExchange.getResponseHeaders().add("Content-Type", "application/json");
-            httpExchange.sendResponseHeaders(200, response.getBytes().length);
-            httpExchange.getResponseBody().write(response.getBytes());
+        server.createContext("/", (HttpExchange httpExchange) -> {
+            try {
+                DispatchResult result = Dispatcher.handle(httpExchange);
+
+                String response = "{\"data\": \"hello\"}";
+                httpExchange.getResponseHeaders().add("Content-Type", "application/json");
+                httpExchange.sendResponseHeaders(result.httpStatusCode, response.getBytes().length);
+                httpExchange.getResponseBody().write(response.getBytes());
+            } catch (Exception e) {
+                e.printStackTrace();
+                httpExchange.sendResponseHeaders(500, 0);
+            }
+
             httpExchange.getResponseBody().flush();
             httpExchange.getResponseBody().close();
         });
