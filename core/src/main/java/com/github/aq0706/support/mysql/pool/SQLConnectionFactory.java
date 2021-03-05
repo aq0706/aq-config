@@ -24,7 +24,7 @@ public class SQLConnectionFactory {
         this.driverProperties = new Properties();
         this.driverProperties.setProperty(PropertyKey.USER.getKeyName(), config.username);
         this.driverProperties.setProperty(PropertyKey.PASSWORD.getKeyName(), config.password);
-
+        this.driverProperties.setProperty(PropertyKey.serverTimezone.getKeyName(), "Asia/Shanghai");
         try {
             initDriver();
         } catch (SQLException e) {
