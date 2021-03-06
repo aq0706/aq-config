@@ -49,7 +49,7 @@ public class DB {
                     if (key != null) {
                         isAutoIncrement = key.isAutoIncrement();
                     }
-                    tableInfo.columns.add(new MyFieldMappingInfo.Column(field.getName(), column.name(), isAutoIncrement));
+                    tableInfo.columns.add(new MyFieldMappingInfo.Column(field.getName(), column.name(), key != null, isAutoIncrement));
                 }
             }
             tableInfoMap.putIfAbsent(beanClass, tableInfo);

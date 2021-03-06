@@ -3,14 +3,13 @@ package com.github.aq0706.support.json;
 public class JSONToken {
 
     public static final int TYPE_STRING = 0;
-    public static final int TYPE_NUMBER = 1;
-    public static final int TYPE_BOOL = 2;
-    public static final int TYPE_LEFT_BRACE = 3;
-    public static final int TYPE_RIGHT_BRACE = 4;
-    public static final int TYPE_LEFT_SQUARE = 5;
-    public static final int TYPE_RIGHT_SQUARE = 6;
-    public static final int TYPE_COMMA = 7;
-    public static final int TYPE_COLON = 8;
+    public static final int TYPE_VALUE = 1;
+    public static final int TYPE_LEFT_BRACE = 2;
+    public static final int TYPE_RIGHT_BRACE = 3;
+    public static final int TYPE_LEFT_SQUARE = 4;
+    public static final int TYPE_RIGHT_SQUARE = 5;
+    public static final int TYPE_COMMA = 6;
+    public static final int TYPE_COLON = 7;
     public static final int TYPE_EOF = -1;
 
     int pos;
@@ -25,7 +24,7 @@ public class JSONToken {
 
     @Override
     public String toString() {
-        if (type == TYPE_STRING || type == TYPE_NUMBER || type == TYPE_BOOL) {
+        if (type == TYPE_STRING || type == TYPE_VALUE) {
             return value.toString();
         } else if (type == TYPE_LEFT_BRACE) {
             return "{";

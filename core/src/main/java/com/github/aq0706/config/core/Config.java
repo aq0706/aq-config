@@ -14,7 +14,7 @@ public class Config {
 
     @Key(isAutoIncrement = true)
     @Column(name = "id")
-    public long id;
+    Long id;
 
     @Column(name = "namespace")
     String namespace;

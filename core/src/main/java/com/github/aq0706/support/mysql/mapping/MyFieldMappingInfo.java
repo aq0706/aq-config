@@ -14,11 +14,14 @@ public class MyFieldMappingInfo {
     public static class Column {
         public String fieldName;
         public String mySQLFieldName;
+
+        public boolean isKey;
         public boolean isAutoIncrement;
 
-        public Column(String fieldName, String mySQLFieldName, boolean isAutoIncrement) {
+        public Column(String fieldName, String mySQLFieldName, boolean isKey, boolean isAutoIncrement) {
             this.fieldName = fieldName;
             this.mySQLFieldName = mySQLFieldName;
+            this.isKey = isKey;
             this.isAutoIncrement = isAutoIncrement;
         }
     }

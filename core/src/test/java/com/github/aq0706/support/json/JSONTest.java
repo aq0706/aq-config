@@ -57,8 +57,8 @@ public class JSONTest extends TestCase {
     }
 
     static class Student {
-        String name;
-        int age;
+        private String name;
+        Integer age;
         boolean isGirl;
 
         List<Student> students;
@@ -83,6 +83,17 @@ public class JSONTest extends TestCase {
         @Override
         public int hashCode() {
             return Objects.hash(name, age, isGirl, students, teacher);
+        }
+
+        @Override
+        public String toString() {
+            return "Student{" +
+                    "name='" + name + '\'' +
+                    ", age=" + age +
+                    ", isGirl=" + isGirl +
+                    ", students=" + students +
+                    ", teacher=" + teacher +
+                    '}';
         }
     }
 
@@ -110,6 +121,14 @@ public class JSONTest extends TestCase {
         @Override
         public int hashCode() {
             return Objects.hash(name, age);
+        }
+
+        @Override
+        public String toString() {
+            return "Teacher{" +
+                    "name='" + name + '\'' +
+                    ", age=" + age +
+                    '}';
         }
     }
 }

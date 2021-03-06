@@ -2,7 +2,6 @@ package com.github.aq0706.support.json;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class JSONParser<T> {
@@ -53,13 +52,15 @@ public class JSONParser<T> {
                         valueStack.push(token.value);
                     } else if (token.type == JSONToken.TYPE_COLON) {
                         status = STATUS_PAIR_VALUE;
+                    } else if (token.type == JSONToken.TYPE_RIGHT_BRACE) {
+                        status = statusStack.pop();
                     } else {
                         throwError(token);
                     }
                     break;
                 }
                 case STATUS_PAIR_VALUE: {
-                    if (token.type == JSONToken.TYPE_NUMBER || token.type == JSONToken.TYPE_STRING || token.type == JSONToken.TYPE_BOOL) {
+                    if (token.type == JSONToken.TYPE_VALUE || token.type == JSONToken.TYPE_STRING) {
                         String key = (String)valueStack.pop();
                         Map<String, Object> map = (Map<String, Object>)valueStack.peek();
                         map.put(key, token);
@@ -92,7 +93,7 @@ public class JSONParser<T> {
                     break;
                 }
                 case STATUS_ARRAY: {
-                    if (token.type == JSONToken.TYPE_NUMBER || token.type == JSONToken.TYPE_STRING || token.type == JSONToken.TYPE_BOOL) {
+                    if (token.type == JSONToken.TYPE_VALUE || token.type == JSONToken.TYPE_STRING) {
                         List<Object> list = (List<Object>)valueStack.peek();
                         list.add(token);
                     } else if (token.type == JSONToken.TYPE_LEFT_BRACE) {
@@ -151,39 +152,38 @@ public class JSONParser<T> {
                     Object v = ((Map.Entry)entry).getValue();
 
                     Field field = result.getClass().getDeclaredField((String) k);
+                    Class<?> fieldType = field.getType();
+                    if (!field.isAccessible()) {
+                        field.setAccessible(true);
+                    }
                     if (v instanceof JSONToken) {
                         if (((JSONToken) v).type == JSONToken.TYPE_STRING) {
                             field.set(result, ((JSONToken) v).value);
-                        } else if (((JSONToken) v).type == JSONToken.TYPE_BOOL) {
-                            field.setBoolean(result, (Boolean) ((JSONToken) v).value);
-                        } else if (((JSONToken) v).type == JSONToken.TYPE_NUMBER) {
-                            String fieldTypeName = field.getGenericType().getTypeName();
-                            if (fieldTypeName.equals("byte") || fieldTypeName.equals(Byte.class.getName())) {
-                                field.setByte(result, Byte.parseByte(((JSONToken) v).value.toString()));
-                            } else if (fieldTypeName.equals("short") || fieldTypeName.equals(Short.class.getName())) {
-                                field.setShort(result, Short.parseShort(((JSONToken) v).value.toString()));
-                            } else if (fieldTypeName.equals("int") || fieldTypeName.equals(Integer.class.getName())) {
-                                field.setInt(result, Integer.parseInt(((JSONToken) v).value.toString()));
-                            } else if (fieldTypeName.equals("long") || fieldTypeName.equals(Long.class.getName())) {
-                                field.setLong(result, Long.parseLong(((JSONToken) v).value.toString()));
-                            } else if (fieldTypeName.equals("boolean") || fieldTypeName.equals(Boolean.class.getName())) {
-                                field.setBoolean(result, Boolean.parseBoolean(((JSONToken) v).value.toString()));
+                        } else if (((JSONToken) v).type == JSONToken.TYPE_VALUE) {
+                            if (fieldType == Byte.class || fieldType == byte.class) {
+                                field.set(result, Byte.parseByte(((JSONToken) v).value.toString()));
+                            } else if (fieldType == Short.class || fieldType == short.class) {
+                                field.set(result, Short.parseShort(((JSONToken) v).value.toString()));
+                            } else if (fieldType == Integer.class || fieldType == int.class) {
+                                field.set(result, Integer.parseInt(((JSONToken) v).value.toString()));
+                            } else if (fieldType == Long.class || fieldType == long.class) {
+                                field.set(result, Long.parseLong(((JSONToken) v).value.toString()));
+                            } else if (fieldType == Boolean.class || fieldType == boolean.class) {
+                                field.set(result, Boolean.parseBoolean(((JSONToken) v).value.toString()));
                             }
                         }
                     } else if (v instanceof Map) {
-                        String fieldClassName = field.getGenericType().getTypeName();
-                        Object filedInstance = Class.forName(fieldClassName).newInstance();
+                        Object filedInstance = fieldType.newInstance();
                         field.set(result, filedInstance);
                         setObjectValue(filedInstance, v);
                     } else if (v instanceof List) {
-                        Class<?> fieldType = field.getType();
                         Collection<Object> newCollection;
                         if (fieldType == List.class) {
                             newCollection = new ArrayList<>();
                         } else if (fieldType == Set.class) {
                             newCollection = new LinkedHashSet<>();
                         } else {
-                            throw new IllegalStateException("UnSupport field:" + field.getName() + " type:" + field.getType().getSimpleName());
+                            throw new IllegalStateException("UnSupport field:" + field.getName() + " type:" + fieldType.getSimpleName());
                         }
 
                         Class elementTypeClass = (Class) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
@@ -211,8 +211,8 @@ public class JSONParser<T> {
 
     private JSONToken findNextToken() {
         StringBuilder str = null;
-        StringBuilder number = null;
-        StringBuilder bool = null;
+        StringBuilder valueBuilder = null;
+        int valuePosStart = 0;
 
         for (;;) {
             if (currentPos == buffer.length) {
@@ -222,6 +222,8 @@ public class JSONParser<T> {
             byte value = buffer[currentPos++];
             switch (value) {
                 case ' ':
+                case '\r':
+                case '\n':
                 case '\\': {
                     continue;
                 }
@@ -229,19 +231,34 @@ public class JSONParser<T> {
                     return new JSONToken(currentPos - 1, JSONToken.TYPE_LEFT_BRACE, null);
                 }
                 case '}': {
-                    return new JSONToken(currentPos - 1, JSONToken.TYPE_RIGHT_BRACE, null);
+                    if (valueBuilder != null) {
+                        currentPos--;
+                        return new JSONToken(valuePosStart, JSONToken.TYPE_VALUE, valueBuilder.toString());
+                    } else {
+                        return new JSONToken(currentPos - 1, JSONToken.TYPE_RIGHT_BRACE, null);
+                    }
                 }
                 case '[': {
                     return new JSONToken(currentPos - 1, JSONToken.TYPE_LEFT_SQUARE, null);
                 }
                 case ']': {
-                    return new JSONToken(currentPos - 1, JSONToken.TYPE_RIGHT_SQUARE, null);
+                    if (valueBuilder != null) {
+                        currentPos--;
+                        return new JSONToken(valuePosStart, JSONToken.TYPE_VALUE, valueBuilder.toString());
+                    } else {
+                        return new JSONToken(currentPos - 1, JSONToken.TYPE_RIGHT_SQUARE, null);
+                    }
                 }
                 case ':': {
                     return new JSONToken(currentPos - 1, JSONToken.TYPE_COLON, null);
                 }
                 case ',': {
-                    return new JSONToken(currentPos - 1, JSONToken.TYPE_COMMA, null);
+                    if (valueBuilder != null) {
+                        currentPos--;
+                        return new JSONToken(valuePosStart, JSONToken.TYPE_VALUE, valueBuilder.toString());
+                    } else {
+                        return new JSONToken(currentPos - 1, JSONToken.TYPE_COMMA, null);
+                    }
                 }
                 case '"': {
                     if (str == null) {
@@ -257,39 +274,12 @@ public class JSONParser<T> {
                     if (str != null) {
                         str.append((char)value);
                     } else {
-                        boolean isNumber = false;
-                        try {
-                            Integer ignored = Integer.parseInt((char) value + "");
-                            isNumber = true;
-                        } catch (Exception ignored) {
-
+                        if (valueBuilder == null) {
+                            valueBuilder = new StringBuilder();
+                            valuePosStart = currentPos - 1;
                         }
 
-                        byte nextValue = buffer[currentPos];
-                        boolean isFinished = nextValue == ']' || nextValue == '}' || nextValue == ',';
-
-                        if (isNumber) {
-                            if (number == null) {
-                                number = new StringBuilder();
-                            }
-
-                            number.append((char) value);
-
-                            if (isFinished) {
-                                return new JSONToken(currentPos - number.length(), JSONToken.TYPE_NUMBER, number.toString());
-
-                            }
-                        } else {
-                            if (bool == null) {
-                                bool = new StringBuilder();
-                            }
-
-                            bool.append((char) value);
-
-                            if (isFinished) {
-                                return new JSONToken(currentPos - bool.length(), JSONToken.TYPE_BOOL, Boolean.parseBoolean(bool.toString()));
-                            }
-                        }
+                        valueBuilder.append((char) value);
                     }
                     break;
                 }
