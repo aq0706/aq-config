@@ -4,9 +4,10 @@ import com.github.aq0706.lang.ReflectionUtil;
 import com.github.aq0706.support.json.JSON;
 import com.sun.net.httpserver.HttpExchange;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,36 +53,69 @@ public class Dispatcher {
     public static DispatchResult handle(HttpExchange httpExchange) throws Exception {
         DispatchResult result = new DispatchResult();
 
-        String uri = httpExchange.getRequestURI().getPath();
+        String path = httpExchange.getRequestURI().getPath();
         String requestMethod = httpExchange.getRequestMethod();
 
-        Handler handler = handlers.get(uri + "_" + requestMethod);
+        Handler handler = handlers.get(path + "_" + requestMethod);
         if (handler == null) {
             result.httpStatusCode = 404;
         } else {
-            int contentLength = Integer.parseInt(httpExchange.getRequestHeaders().getFirst("Content-length"));
-            byte[] requestBody = new byte[contentLength];
-            int read = httpExchange.getRequestBody().read(requestBody);
-            if (contentLength != 0 && read != contentLength) {
-                throw new IllegalStateException("ContentLength: " + contentLength + " != read: " + read);
-            }
+            byte[] requestBody = getRequestBody(httpExchange);
+            Map<String, String> queryParams = getRequestQueryParams(httpExchange);
 
             Object controller = handler.controller;
             Method handlerMethod = handler.method;
-            Type[] parameterTypes = handlerMethod.getGenericParameterTypes();
-            if (parameterTypes.length == 0) {
+            Parameter[] parameters = handlerMethod.getParameters();
+            if (parameters.length == 0) {
                 result.result = handlerMethod.invoke(controller);
             } else {
-                // TODO Only support first param(JSON) for now.
-                Object[] values = new Object[1];
+                Object[] values = new Object[parameters.length];
                 for (int i = 0; i < values.length; i++) {
-                    values[i] = JSON.parse(requestBody, (Class) parameterTypes[i]);
+                    if (parameters[i].getDeclaredAnnotation(RequestBody.class) != null) {
+                        values[i] = JSON.parse(requestBody, (Class) parameters[i].getParameterizedType());
+                    } else if (parameters[i].getDeclaredAnnotation(RequestParam.class) != null) {
+                        RequestParam requestParam = parameters[i].getDeclaredAnnotation(RequestParam.class);
+                        String value = queryParams.get(requestParam.name());
+
+                        if (requestParam.required() && value == null) {
+                            throw new IllegalArgumentException("Missing request query string:" + requestParam.name());
+                        }
+
+                        values[i] = value;
+                    }
                 }
                 result.result = handlerMethod.invoke(controller, values);
             }
             result.httpStatusCode = 200;
         }
 
+        return result;
+    }
+
+    private static byte[] getRequestBody(HttpExchange httpExchange) throws IOException {
+        byte[] requestBody = null;
+        String contentLengthStr = httpExchange.getRequestHeaders().getFirst("Content-length");
+        if (contentLengthStr != null) {
+            int contentLength = Integer.parseInt(httpExchange.getRequestHeaders().getFirst("Content-length"));
+            requestBody = new byte[contentLength];
+            int read = httpExchange.getRequestBody().read(requestBody);
+            if (contentLength != 0 && read != contentLength) {
+                throw new IllegalStateException("ContentLength: " + contentLength + " != read: " + read);
+            }
+        }
+
+        return requestBody;
+    }
+
+    private static Map<String, String> getRequestQueryParams(HttpExchange httpExchange) {
+        Map<String, String> result = new HashMap<>();
+        String queryString = httpExchange.getRequestURI().getQuery();
+        if (queryString != null) {
+            for (String group : queryString.split("&")) {
+                String[] pair = group.split("=");
+                result.put(pair[0], pair[1]);
+            }
+        }
         return result;
     }
 

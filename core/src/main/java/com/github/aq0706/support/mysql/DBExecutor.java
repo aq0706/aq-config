@@ -214,7 +214,11 @@ public class DBExecutor<T> {
             throw new IllegalStateException("More than one result");
         }
 
-        return results.get(0);
+        if (results.isEmpty()) {
+            return null;
+        } else {
+            return results.get(0);
+        }
     }
 
     public final List<T> findAll() throws SQLException {

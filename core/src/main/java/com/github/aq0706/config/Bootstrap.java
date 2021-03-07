@@ -1,4 +1,4 @@
-package com.github.aq0706;
+package com.github.aq0706.config;
 
 import com.github.aq0706.support.mysql.DB;
 import com.github.aq0706.support.mysql.pool.SQLConnectionPool;

@@ -18,6 +18,8 @@ public class JSONWriter {
                 writer.write(object.toString());
             } else if (object instanceof Number) {
                 writer.write(object.toString());
+            } else if (object instanceof Map) {
+                writeMap((Map)object, writer);
             } else {
                 writeObject(object, writer);
             }
