@@ -2,7 +2,9 @@ package com.github.aq0706.support.json;
 
 import junit.framework.TestCase;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class JSONTest extends TestCase {
 
@@ -73,7 +75,7 @@ public class JSONTest extends TestCase {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Student student = (Student) o;
-            return age == student.age &&
+            return age.equals(student.age) &&
                     isGirl == student.isGirl &&
                     Objects.equals(name, student.name) &&
                     Objects.equals(students, student.students) &&
