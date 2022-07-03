@@ -1,6 +1,6 @@
 package com.github.aq0706.support.mysql;
 
-import com.github.aq0706.config.Bootstrap;
+import com.github.aq0706.config.AqConfig;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ public class SQLConfig {
 
     static {
         Properties properties = new Properties();
-        InputStream propertiesStream = Bootstrap.class.getClassLoader().getResourceAsStream("config.properties");
+        InputStream propertiesStream = AqConfig.class.getClassLoader().getResourceAsStream("config.properties");
         try {
             properties.load(propertiesStream);
         } catch (IOException e) {

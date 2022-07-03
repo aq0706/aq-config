@@ -48,5 +48,7 @@ public class JSONHttpServer {
             });
         });
         server.start();
+
+        System.out.println("HttpServer started on port " + port);
     }
 }

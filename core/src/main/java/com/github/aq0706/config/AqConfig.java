@@ -12,12 +12,16 @@ import java.util.Properties;
 /**
  * @author lidq
  */
-public class Bootstrap {
+public class AqConfig {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Properties properties = new Properties();
-        InputStream propertiesStream = Bootstrap.class.getClassLoader().getResourceAsStream("config.properties");
-        properties.load(propertiesStream);
+        InputStream propertiesStream = AqConfig.class.getClassLoader().getResourceAsStream("config.properties");
+        try {
+            properties.load(propertiesStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         int port = 17060;
         try {

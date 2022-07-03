@@ -112,6 +112,6 @@ public class SQLConnectionPool extends SourcePool<SQLConnectionEntry> {
 
             return method.invoke(delegate, args);
         };
-        return (Connection) Proxy.newProxyInstance(Connection.class.getClassLoader(), new Class[]{ Connection.class }, handler);
+        return (Connection) Proxy.newProxyInstance(delegate.getClass().getClassLoader(), delegate.getClass().getInterfaces(), handler);
     }
 }
